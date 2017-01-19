@@ -199,7 +199,6 @@ static char *send_rtpp_command(struct rtpp_node *, bencode_item_t *, int *);
 static int get_extra_id(struct sip_msg* msg, str *id_str);
 
 static int rtpengine_set_store(modparam_t type, void * val);
-static int rtpengine_add_rtpengine_set(char * rtp_proxies, unsigned int weight, int disabled, unsigned int ticks);
 
 static int mod_init(void);
 static int child_init(int);
@@ -340,6 +339,7 @@ static param_export_t params[] = {
 	{"rtpengine_allow_op",    INT_PARAM, &rtpengine_allow_op     },
 	{"queried_nodes_limit",   INT_PARAM, &queried_nodes_limit    },
 	{"db_url",                PARAM_STR, &rtpp_db_url            },
+	{"etcd_url",              PARAM_STR, &rtpp_etcd_url          },
 	{"table_name",            PARAM_STR, &rtpp_table_name        },
 	{"setid_col",             PARAM_STR, &rtpp_setid_col         },
 	{"url_col",               PARAM_STR, &rtpp_url_col           },
@@ -911,7 +911,7 @@ int add_rtpengine_socks(struct rtpp_set * rtpp_list, char * rtpproxy,
 /* 0 - succes
  * -1 - erorr
  * */
-static int rtpengine_add_rtpengine_set(char * rtp_proxies, unsigned int weight, int disabled, unsigned int ticks)
+int rtpengine_add_rtpengine_set(char * rtp_proxies, unsigned int weight, int disabled, unsigned int ticks)
 {
 	char *p,*p2;
 	struct rtpp_set * rtpp_list;
@@ -1668,9 +1668,18 @@ mod_init(void)
 		}
 	}
 
-	if (rtpp_db_url.s == NULL)
+    if (rtpp_etcd_url.s != NULL)
+    {
+        LM_INFO("Loading rtp proxy definitions from etcd\n");
+        if ( init_rtpproxy_etcd() < 0)
+        {
+            LM_ERR("error while loading rtp proxies from database\n");
+            return -1;
+        }
+
+    } else 	if (rtpp_db_url.s == NULL)
 	{
-		/* storing the list of rtp proxy sets in shared memory*/
+		// storing the list of rtp proxy sets in shared memory
 		for(i=0;i<rtpp_sets;i++){
 			if(rtpengine_add_rtpengine_set(rtpp_strings[i], 1, 0, 0) !=0){
 				for(;i<rtpp_sets;i++)

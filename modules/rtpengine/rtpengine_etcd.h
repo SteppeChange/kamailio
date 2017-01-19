@@ -3,6 +3,8 @@
 #ifndef _RTPENGINE_ETCD_H
 #define _RTPENGINE_ETCD_H
 
-void test_etcd();
+int test_etcd(void);
+int init_rtpproxy_etcd(void);
+int rtpp_load_etcd(void);
 
 #endif

@@ -26,6 +26,7 @@
 #include "bencode.h"
 #include "../../str.h"
 #include "../../locking.h"
+#include "rtpengine_etcd.h"
 
 #define MI_MIN_RECHECK_TICKS		0
 #define MI_MAX_RECHECK_TICKS		((unsigned int)-1)
@@ -81,11 +82,13 @@ int add_rtpengine_socks(struct rtpp_set * rtpp_list, char * rtpproxy, unsigned i
 int rtpengine_delete_node(struct rtpp_node *rtpp_node);
 int rtpengine_delete_node_set(struct rtpp_set *rtpp_list);
 int rtpengine_delete_node_all();
-
+int rtpengine_add_rtpengine_set(char * rtp_proxies, unsigned int weight, int disabled, unsigned int ticks);
 
 int init_rtpproxy_db(void);
 
+
 extern str rtpp_db_url;
+extern str rtpp_etcd_url;
 extern str rtpp_table_name;
 extern str rtpp_setid_col;
 extern str rtpp_url_col;

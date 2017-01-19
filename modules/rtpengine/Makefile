@@ -15,6 +15,3 @@ SER_LIBS+=$(SERLIBPATH)/kcore/kcore
 SER_LIBS+=$(SERLIBPATH)/srdb1/srdb1
 include ../../Makefile.modules
 
-
-undefined symbol: curl_easy_perform
-

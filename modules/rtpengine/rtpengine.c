@@ -1578,6 +1578,31 @@ mi_reload_rtp_proxy(struct mi_root* cmd_tree, void* param)
 	struct mi_root *root = NULL;
 	unsigned int current_rtpp_no;
 
+    if (rtpp_etcd_url.s != NULL)
+    {
+        LM_INFO("Loading rtp proxy definitions from etcd\n");
+        if ( init_rtpproxy_etcd() < 0)
+        {
+            LM_ERR("error while loading rtp proxies from database\n");
+            return 0;
+        }
+        lock_get(rtpp_no_lock);
+        current_rtpp_no = *rtpp_no;
+        lock_release(rtpp_no_lock);
+        if (rtpp_socks_size != current_rtpp_no) {
+            build_rtpp_socks(current_rtpp_no);
+        }
+        // success reloading from database
+        root = init_mi_tree(200, MI_DB_OK, MI_DB_OK_LEN);
+        if (!root) {
+            LM_ERR("the MI tree cannot be initialized!\n");
+            return 0;
+        }
+        else
+            return root;
+    }
+
+
 	if (rtpp_db_url.s == NULL) {
 		// no database
 		root = init_mi_tree(404, MI_DB_NOT_FOUND, MI_DB_NOT_FOUND_LEN);

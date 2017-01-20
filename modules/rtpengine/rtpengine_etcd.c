@@ -12,7 +12,10 @@ str rtpp_etcd_url = {NULL, 0};
 // sudo apt-get install libyajl-dev  libcurl4-openssl-dev libjson-c-dev
 // curl -L 'http://127.0.0.1:2379/v2/keys/config/kamailio/'
 // curl -L -X PUT http://127.0.0.1:2379/v2/keys/config/kamailio/running/54.243.19.79 -d value="{ \"ip\":\"54.243.19.79\" }"
+// curl -L -X DELETE http://127.0.0.1:2379/v2/keys/config/kamailio/running/54.243.19.79
 // kamctl fifo nh_show_rtpp all
+// kamctl fifo nh_reload_rtpp all
+
 
 int init_rtpproxy_etcd(void)
 {
@@ -41,7 +44,7 @@ int rtpp_load_etcd(void)
     cetcd_client_init(&cli, &addrs);
 
     cetcd_response *resp;
-    resp = cetcd_lsdir(&cli, "/config/kamailio/running/", 0, 0);
+    resp = cetcd_lsdir(&cli, "/config/rtpengine/running/", 0, 0);
     if(resp->err) {
         LM_ERR("etcd reading failed :%d, %s (%s)\n", resp->err->ecode, resp->err->message, resp->err->cause);
         return -1;
@@ -60,19 +63,24 @@ int rtpp_load_etcd(void)
             struct json_object *jobj;
             char* str_ip = 0;
             jobj = json_tokener_parse(value);
-            json_object* returnObj;
-            json_object_object_get_ex(jobj, "ip", &returnObj);
-            str_ip = (char *) json_object_get_string(returnObj);
+            if(jobj==NULL) {
+                LM_ERR("rtpengine bad config format\n");
+            }
+            else {
+                json_object *returnObj;
+                json_object_object_get_ex(jobj, "ip", &returnObj);
+                str_ip = (char *) json_object_get_string(returnObj);
 
-            // TO DO add to etcd schema and port to etcd
-            // udp:127.0.0.1:22222
-            char url[80];
-            memset(url,0,sizeof(url));
-            strcat(url, "udp:");
-            strcat(url, str_ip);
-            strcat(url, ":22222");
-            if(rtpengine_add_rtpengine_set(&url[0], 1, 0, 0) !=0)
-                return -1;
+                // TO DO add to etcd schema and port to etcd
+                // udp:127.0.0.1:22222
+                char url[80];
+                memset(url, 0, sizeof(url));
+                strcat(url, "udp:");
+                strcat(url, str_ip);
+                strcat(url, ":22222");
+                if (rtpengine_add_rtpengine_set(&url[0], 1, 0, 0) != 0)
+                    return -1;
+            }
         }
     }
 
